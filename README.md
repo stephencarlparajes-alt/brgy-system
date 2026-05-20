@@ -15,14 +15,14 @@ brgy-system/
 
 ## ⚙️ Tech Stack
 
-| Layer     | Technology                              |
-|-----------|-----------------------------------------|
-| Frontend  | React 18, Vite, React Router v6, Recharts |
-| Backend   | Express.js, Node.js (ESM)               |
-| Database  | MySQL 8 (via mysql2)                    |
-| Auth      | express-session + express-mysql-session |
-| Security  | bcryptjs, helmet, cors, express-rate-limit |
-| UI Icons  | react-icons (Material Design)           |
+| Layer     | Technology                                   |
+|-----------|----------------------------------------------|
+| Frontend  | React 18, Vite, React Router v6, Recharts    |
+| Backend   | Express.js, Node.js (CommonJS)               |
+| Database  | MySQL 8 (via mysql2)                         |
+| Auth      | express-session                              |
+| Security  | bcryptjs, helmet, cors, express-rate-limit   |
+| UI Icons  | react-icons (Material Design)                |
 
 ---
 
@@ -33,7 +33,7 @@ brgy-system/
 1. Open **phpMyAdmin** or MySQL Workbench
 2. Run the SQL file:
    ```
-   backend/src/config/database.sql
+   backend/brgy_sto_tomas.sql
    ```
 3. This creates the `brgy_sto_tomas` database with all tables and a default admin account.
 
@@ -51,11 +51,9 @@ cd backend
 npm install
 ```
 
-Copy the `.env` file and update your database credentials:
-```env
-PORT=5000
-NODE_ENV=development
+Update your `.env` file with your database credentials:
 
+```env
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
@@ -63,11 +61,13 @@ DB_PASSWORD=          ← your MySQL password
 DB_NAME=brgy_sto_tomas
 
 SESSION_SECRET=change_this_to_a_long_random_string
-SESSION_NAME=brgy_session
-SESSION_MAX_AGE=86400000
+PORT=5000
 
 CLIENT_URL=http://localhost:5173
 LANDING_URL=http://localhost:3000
+
+GMAIL_USER=your_gmail@gmail.com
+GMAIL_APP_PASSWORD=your_16_char_app_password
 ```
 
 Start the backend:
@@ -96,38 +96,37 @@ The Vite proxy automatically forwards `/api` requests to the backend.
 
 ### Step 4 — Landing Page
 
-The `ui/index.html` is a standalone HTML file. Open it directly in a browser or serve it with any static server:
+The `ui/index.html` is a standalone HTML file. Open it directly in a browser or serve it:
 
 ```bash
 cd ui
 npx serve .     # or just open index.html in browser
 ```
 
-Landing page: **http://localhost:3000** (or just open index.html)
+Landing page: **http://localhost:3000**
 
 ---
 
 ## 🔐 Security Features
 
 | Feature | Implementation |
-|---------|---------------|
-| Password Hashing | bcryptjs with 12 salt rounds |
-| Session Security | httpOnly cookie, sameSite strict, MySQL session store |
-| SQL Injection | Prepared statements (mysql2 `execute()`) |
-| Brute Force | Rate limiting: 10 login attempts / 15 min |
-| HTTP Headers | Helmet.js security headers |
-| CORS | Whitelist: localhost:5173 + localhost:3000 only |
-| Role Auth | Middleware: requireAdmin, requireResident, requireVerified |
-| Soft Deletes | deleted_at column — data preserved, not permanently removed |
+|---------|----------------|
+| Password Hashing | bcryptjs with 10 salt rounds |
+| Session Security | httpOnly cookie, 8-hour max age |
+| SQL Injection | Prepared statements via mysql2 `execute()` |
+| Brute Force | Rate limit: 10 login attempts / 15 min per IP |
+| Global Rate Limit | 100 requests / 15 min per IP |
+| HTTP Headers | helmet.js security headers |
+| CORS | Whitelist: CLIENT_URL + LANDING_URL only |
+| Role Auth | requireAdmin, requireVerified middleware |
 | Input Validation | express-validator on all auth routes |
-| Multi-statement | Disabled (`multipleStatements: false`) |
 
 ---
 
 ## 📦 10 System Modules
 
-| # | Module | Route |
-|---|--------|-------|
+| # | Module | API Route |
+|---|--------|-----------|
 | 1 | Authentication | `/api/auth` |
 | 2 | Residents | `/api/residents` |
 | 3 | Officials | `/api/officials` |
@@ -136,8 +135,9 @@ Landing page: **http://localhost:3000** (or just open index.html)
 | 6 | Certificate of Indigency | `/api/indigency` |
 | 7 | Certificate of Residency | `/api/residency` |
 | 8 | Business Permit | `/api/permits` |
-| 9 | Document History | `/api/history` |
-| 10 | Account Verification | `/api/verify` |
+| 9 | Payments | `/api/payments` |
+| 10 | Document History | `/api/history` |
+| + | Account Verification | `/api/verify` |
 | + | Dashboard Stats | `/api/dashboard` |
 
 ---
@@ -149,12 +149,12 @@ Landing page: **http://localhost:3000** (or just open index.html)
 | `users` | Admin & resident accounts (bcrypt passwords) |
 | `residents` | Resident demographic records |
 | `officials` | Barangay officials & positions |
-| `blotter_records` | Incident reports |
-| `clearance_requests` | Barangay clearance requests |
-| `indigency_requests` | Certificate of indigency requests |
-| `residency_requests` | Certificate of residency requests |
-| `permit_requests` | Business permit applications |
-| `or_counter` | Shared OR number counter |
+| `blotter` | Incident/blotter reports |
+| `clearance` | Barangay clearance requests |
+| `indigency` | Certificate of indigency requests |
+| `residency` | Certificate of residency requests |
+| `permits` | Business permit applications |
+| `payments` | Payment records for all document types |
 | `sessions` | MySQL session store (auto-created) |
 
 ---
@@ -162,6 +162,7 @@ Landing page: **http://localhost:3000** (or just open index.html)
 ## 🖥️ Pages & Routes
 
 ### Admin Portal (`/admin/*`)
+
 | Page | Route |
 |------|-------|
 | Dashboard | `/admin` |
@@ -172,14 +173,18 @@ Landing page: **http://localhost:3000** (or just open index.html)
 | Indigency | `/admin/indigency` |
 | Residency | `/admin/residency` |
 | Permits | `/admin/permits` |
-| History | `/admin/history` |
+| Payments | `/admin/payments` |
+| Doc. History | `/admin/history` |
 | Verify Accounts | `/admin/verify` |
 
 ### Resident Portal (`/portal/*`)
+
 | Page | Route |
 |------|-------|
 | Home | `/portal` |
 | My Requests | `/portal/requests` |
+| My Payments | `/portal/payments` |
+| My Profile | `/portal/profile` |
 | Request Clearance | `/portal/clearance` |
 | Request Indigency | `/portal/indigency` |
 | Request Residency | `/portal/residency` |
@@ -187,22 +192,42 @@ Landing page: **http://localhost:3000** (or just open index.html)
 
 ---
 
+## 💳 Payment Flow
+
+### Online Request → Online Payment (GCash / Maya)
+1. Resident submits request online
+2. Admin approves → payment status becomes `Awaiting Payment`
+3. Resident opens payment modal, selects GCash or Maya, submits → status becomes `Pending`
+4. Admin confirms payment → document auto-released with OR number
+
+### Online Request → Cash Payment at Hall
+1. Resident submits request online
+2. Admin approves → payment status becomes `Awaiting Payment`
+3. Resident walks in to the barangay hall
+4. Admin clicks **"Cash"** button on the Payments page → document auto-released with OR number
+
+### Walk-in
+1. Admin uses the **Walk-in** button on any document page
+2. Fills out resident details, selects payment method, submits
+3. Document is immediately released and printed
+
+---
+
 ## 📋 OR Number Format
 
-Auto-generated format: `OR-2025-00001`
-- Shared counter across all 4 document types
+Auto-generated format: `OR-2025-0001`
+- Shared counter across all 4 document types (no duplicates)
 - Resets per year
-- Generated only when status is set to **Released**
+- Only generated when a document is **Released**
 
 ## 📋 Reference Number Format
 
-| Type | Format |
-|------|--------|
-| Clearance | `CLR-2025-00001` |
-| Indigency | `IND-2025-00001` |
-| Residency | `RES-2025-00001` |
-| Permit | `BPR-2025-00001` |
-| Blotter | `BLT-2025-00001` |
+| Document Type | Format |
+|---------------|--------|
+| Barangay Clearance | `CLR-2025-00001` |
+| Certificate of Indigency | `IND-2025-00001` |
+| Certificate of Residency | `RES-2025-00001` |
+| Business Permit | `BPR-2025-00001` |
 
 ---
 
@@ -211,7 +236,7 @@ Auto-generated format: `OR-2025-00001`
 | Name | Role |
 |------|------|
 | Stephen Carl Parajes | Team Leader / Full-stack |
-| Geovanni Paulo Imbiena| Backend / Database |
+| Geovanni Paulo Imbiena | Backend / Database |
 | John Kevin Bueza | Frontend / UI Design |
 
 ---
