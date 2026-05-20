@@ -1,6 +1,6 @@
-# 🏛️ Barangay Sto. Tomas — Management Information System
+# 🏛️ E-Sto.Tomas : Document Request Management
 
-A modern, secure web-based MIS for Barangay Sto. Tomas, Magarao, Camarines Sur.
+A modern, Document Request Website for Barangay Sto. Tomas, Magarao, Camarines Sur.
 
 ## 📁 Project Structure
 
