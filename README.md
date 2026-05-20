@@ -210,9 +210,9 @@ Auto-generated format: `OR-2025-00001`
 
 | Name | Role |
 |------|------|
-| Gemma Laganza | Team Leader / Full-stack |
-| Nikko Sarte | Backend / Database |
-| Rio Sato | Frontend / UI Design |
+| Stephen Carl Parajes | Team Leader / Full-stack |
+| Geovanni Paulo Imbiena| Backend / Database |
+| John Kevin Bueza | Frontend / UI Design |
 
 ---
 
