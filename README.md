@@ -39,7 +39,7 @@ brgy-system/
 
 **Default Admin Login:**
 - Username: `admin`
-- Password: `Admin@1234`
+- Password: `admin123`
 > ⚠️ Change the password immediately after first login!
 
 ---
