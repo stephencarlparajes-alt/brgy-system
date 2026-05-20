@@ -1,4 +1,4 @@
-# 🏛️ E-Sto.Tomas : Document Request Management
+# 🏛️ E-Sto.Tomas : Document Request Management System
 
 A modern, Document Request Website for Barangay Sto. Tomas, Magarao, Camarines Sur.
 
